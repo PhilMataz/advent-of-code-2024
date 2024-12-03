@@ -4,13 +4,24 @@ use std::error;
 fn main() -> Result<(), Box<dyn error::Error + 'static>> {
     let input = fs::read_to_string("input.txt")?;
     const MUL: &str = "mul(";
+    let mut is_mul_enabled = true;
+    const DO: &str = "do()";
+    const DONT: &str = "don't()";
 
     let mut found_word = String::from("");
     let mut found_number = String::from("");
     let mut result: u32 = 0;
     let mut values: Vec<u32>  = Vec::with_capacity(2);
     input.chars().for_each(|char| {
-        if MUL == &found_word {
+        if DO == &found_word {
+            is_mul_enabled = true;
+            found_word = String::from("");
+        }
+        if DONT == &found_word {
+            is_mul_enabled = false;
+            found_word = String::from("");
+        }
+        if  is_mul_enabled && MUL == &found_word {
             match char.to_digit(10) {
                 Some(_) => found_number.push(char),
                 None => {
@@ -58,7 +69,7 @@ fn main() -> Result<(), Box<dyn error::Error + 'static>> {
         } else {
             found_word.push(char);
 
-            if !MUL.starts_with(&found_word) {
+            if !MUL.starts_with(&found_word) && !DO.starts_with(&found_word) && !DONT.starts_with(&found_word) {
                 found_word = String::from("");
             }
         }
