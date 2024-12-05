@@ -10,62 +10,43 @@ fn main() -> Result<(), Box<dyn error::Error + 'static>> {
         .lines()
         .map(|line| line.chars().collect()).collect();
 
-  for i in 0..matrix.len() {
-      count += String::from_iter(matrix[i].clone()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-      count += String::from_iter(matrix[i].clone().into_iter().rev()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-      
-  }
+        for i in 0..matrix.len() {
+            println!("Line #{}: {:?}", i, matrix[i]);
+          }
+        
 
 
 
-  for i in 0..matrix.len() {
+  for i in 1..matrix.len() - 1 {
     let mut row: Vec<char> = vec![];
-    for j in 0..matrix[i].len() {
+    for j in 1..matrix[i].len() - 1 {
+        let character = matrix[i][j];
+        if character == 'A' {
+            println!("Coordinates of A: ({},{})", i, j);
+            let left_top = matrix[i-1][j-1];
+            let right_bottom = matrix[i+1][j+1];
+            println!("left top is: ({}, {}) with a value of: {}", i-1, j-1, left_top);
+            println!("right bottom is: ({}, {}) with a value of: {}", i+1, j+1, right_bottom);
+            if left_top == 'M' && right_bottom == 'S' || left_top == 'S' && right_bottom == 'M' {
+                println!("potential match!");
+                let left_bottom = matrix[i+1][j-1];
+                let right_top = matrix[i-1][j+1];
+                println!("left bottom is: ({}, {}) with a value of: {}", i+1, j-1, left_bottom);
+                println!("right top is: ({}, {}) with a value of: {}", i-1, j+1, right_top);
+                if left_bottom == 'M' && right_top == 'S' || left_bottom == 'S' && right_top == 'M' {
+                    println!("match!");
+                    count += 1;
+                }
+            }
+
+            /* if ((dbg!(matrix[i-1][j-1]) == 'S' && dbg!(matrix[i+1][j+1]) == 'M') || (dbg!(matrix[i-1][j-1])== 'M' && dbg!(matrix[i+1][j+1]) == 'S')) && ((dbg!(matrix[i+1][j-1]) == 'S' && dbg!(matrix[i-1][j+1]) == 'M') || (dbg!(matrix[i-1][j+1]) == 'M' && dbg!(matrix[i+1][j-1]) == 'S')) {
+                println!("found A @: {},{}", i, j);
+                count += 1;
+            } */
+        }
         row.push(matrix[j][i])
     } 
-    count += String::from_iter(row.clone()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-    count += String::from_iter(row.clone().into_iter().rev()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-  }
-
-let mut diagonal_matrix: Vec<Vec<char>> = vec![];
-
-
-
-for i in 0..matrix.len() {
-    let prefix = vec![' '; i];
-    let suffix = vec![' '; matrix.len() - 1 - i];
-    let result: Vec<char> = prefix.iter().chain(&matrix[i]).copied().chain(suffix).collect();
-    diagonal_matrix.push(result)
-}
-
-let mut temp = vec![];
-for i in 0..diagonal_matrix[0].len() {
-    let mut row: Vec<char> = vec![];
-    for j in 0..diagonal_matrix.len() {
-        row.push(diagonal_matrix[j][i]);
-    } 
-    temp.push(row.clone());
-    count += String::from_iter(row.clone()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-    count += String::from_iter(row.clone().into_iter().rev()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-  }
-
-  diagonal_matrix = vec![];
-
-  for i in 0..matrix.len() {
-    let suffix = vec![' '; i];
-    let prefix = vec![' '; matrix.len() - 1 - i];
-    let result: Vec<char> = prefix.iter().chain(&matrix[i]).copied().chain(suffix).collect();
-    diagonal_matrix.push(result)
-}
-
-
-  for i in 0..diagonal_matrix[0].len() {
-    let mut row: Vec<char> = vec![];
-    for j in 0..diagonal_matrix.len() {
-        row.push(diagonal_matrix[j][i]);
-    } 
-    count += String::from_iter(row.clone()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
-    count += String::from_iter(row.clone().into_iter().rev()).matches("XMAS").collect::<Vec<&str>>().len() as u64;
+    // println!("Line #{}: {:?}", i-1, row);
   }
 
 
