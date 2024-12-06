@@ -5,22 +5,7 @@ use std::collections::HashMap;
 fn main() -> Result<(), Box<dyn Error + 'static>>{
     let input = fs::read_to_string("input.txt")?;
 
-    let board: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
-
-/*     println!("board: {:?}", board);
-
-    let mut direction = Direction::Left; */
-
-/*     let position = [5,5];
-
-    let next_position = move_position(&position, get_movement_vector(direction));
-
-    let result = board.get(0);
-    println!("result {:?}", result);
-
-    let some_board_value = get_board_value(board, [0,0]);
-
-    println!("Board Value: {}", some_board_value); */
+    let mut board: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
 
     fn get_starting_position(board: &Vec<Vec<char>>) -> [i32; 2] {
         for i in 0..board.len() {
@@ -32,41 +17,55 @@ fn main() -> Result<(), Box<dyn Error + 'static>>{
         }
         [-1, -1]
     }
+    let mut loops = 0;
+for i in 0..board.len() {
+    for j in 0..board[i].len() {
+        let mut position = get_starting_position(&board);
+        let mut direction = Direction::Top;
+        let mut path: HashMap<([i32;2], Direction), usize> = HashMap::new();
+         if board[i][j] != '^' && board[i][j] != '#' {
+            board[i][j] = '#';
+            loop {
 
-    let mut position = get_starting_position(&board);
-    let mut direction = Direction::Top;
-    let mut moves = HashMap::new();
-    moves.insert(position, 1);
+                if let Some(value) = path.get(&(position.clone(), direction.clone())) {
+                    loops += 1;
+                    break;
+                }
 
-loop{
-        println!("Getting next position");
-        let next_position = move_position(&position, &get_movement_vector(&direction));
-        println!("Next possible position is: {:?}", next_position);
-        println!("Getting value for position");
-        let value_for_next_position = get_board_value(&board, next_position);
-        println!("Value for next position: {}", value_for_next_position);
+                let next_position = move_position(&position, &get_movement_vector(&direction));
+                let value_for_next_position = get_board_value(&board, next_position);
 
-        if value_for_next_position == 'X' {
-            println!("Out of bounds. Game finished!");
-            break;
+                if value_for_next_position == 'X' {
+                    break;
+                }
+                if value_for_next_position == '#' {
+                    direction = rotate(&direction);
+                    
+
+                    continue;
+                }
+
+                
+                path.entry((position, direction.clone())).or_insert(1);
+
+                position = next_position.clone();
+
+            } 
+            board[i][j] = '.';
         }
-        if value_for_next_position == '#' {
-            println!("Hit obsticle, Rotating!");
-            direction = rotate(&direction);
-            continue;
-        }
+    }
+}
 
-        println!("Moving to next position");
-
-        
-        position = next_position.clone();
-        moves.insert(position, 1);
-}    
-
-println!("Number of Moves: {}", moves.len());
+println!("loops: {}", loops);
 
     Ok(())
 
+}
+
+fn print_board(board: &Vec<Vec<char>>) {
+    for line in board {
+        println!("{:?}", line);
+    }
 }
 
 fn move_position(position: &[i32; 2], direction: &[i32; 2]) -> [i32; 2] {
@@ -77,7 +76,11 @@ fn move_position(position: &[i32; 2], direction: &[i32; 2]) -> [i32; 2] {
     
 }
 
+#[derive(Hash)]
+#[derive(Eq)]
+#[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone)]
 enum Direction {
     Right,
     Bottom,
@@ -85,12 +88,20 @@ enum Direction {
     Top,
 }
 
-fn rotate(direction: &Direction) -> Direction {
+fn rotate(direction: &Direction/* , path: &mut HashMap<Direction, usize> */) -> Direction {
     match direction {
-        Direction::Right => Direction::Bottom,
-        Direction::Bottom => Direction::Left,
-        Direction::Left => Direction::Top,
-        Direction::Top => Direction::Right,
+        Direction::Right => {
+            Direction::Bottom
+        },
+        Direction::Bottom => {
+            Direction::Left
+        },
+        Direction::Left => {
+            Direction::Top
+        },
+        Direction::Top => {
+            Direction::Right
+        },
     }
 }
 
