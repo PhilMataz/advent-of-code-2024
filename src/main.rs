@@ -14,10 +14,11 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
     }).filter(|el| {
         let expected_sum: u64 = el.0;
         let numbers: Vec<u64> = (el.1).clone();
-
+        // println!("number: {:?}", numbers);
         let binaries = get_binaries(numbers.len() - 1);
 
-        // println!("expected_sum: {}", expected_sum);
+
+     
         for binary in &binaries {
             let sum = numbers.clone().into_iter().enumerate().fold(0, |acc, (i, num)| {
                 if i == 0 {
@@ -29,10 +30,12 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
                 } else if binary[i-1] == '0' {
                     return acc * num;
                 } else {
-                    let power: usize = num.clone().to_string().len() - 1;
+                    let power: usize = num.clone().to_string().len();
                     let base: u64 = 10;
                     
-                    return acc * base.pow(power as u32) + num;
+                    let result = acc * base.pow(power as u32) + num;
+                    
+                    result
                 }
             });
             if sum == expected_sum {
@@ -78,8 +81,8 @@ fn computed_binary_array(num: &usize, pad: usize) -> Vec<char> {
     let mut power = 1;
     
     while input > 0 {
-        result += (input %2 ) * power;
-        input /= 2;
+        result += (input % 3) * power;
+        input /= 3;
         power *= 10;
     }
     format!("{:0>width$}", result.to_string(), width=pad).chars().collect()
