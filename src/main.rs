@@ -23,21 +23,21 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
     let raw_input = fs::read_to_string("input.txt")?;
     let map_size = raw_input.lines().count() as i64;
 
-    let mut antennas: HashMap<char, Vec<Antenna>> = HashMap::new();
+    let mut antennas: HashMap<char, Vec<Position>> = HashMap::new();
     let mut antinodes: HashMap<Position, usize> = HashMap::new();
 
     raw_input.lines().enumerate().for_each(|(y,line)| line.chars().enumerate().for_each(|(x, el)| {
         if el != '.' {
             let antennas_for_frequency = antennas.entry(el).or_insert(vec![]);
-            antennas_for_frequency.push(Antenna::new(y as i64, x as i64));
+            antennas_for_frequency.push(Position::new(y as i64, x as i64));
         }
     }));
 
     for (_key, value) in antennas.into_iter() {
         for i in 0..value.len() - 1 {
             for j in (i+1)..value.len() {
-                let frequency_for_i = value[i].calculate_frequency(&value[j]);
-                let frequency_for_j = value[j].calculate_frequency(&value[i]);
+                let frequency_for_i = value[i].distance(&value[j]);
+                let frequency_for_j = value[j].distance(&value[i]);
                 if is_valid_position(map_size, &frequency_for_i) {
                     antinodes.entry(frequency_for_i).or_insert(1);
                 }
@@ -69,25 +69,10 @@ impl Position {
             y
         }
     }
-}
-
-#[derive(Debug)]
-struct Antenna {
-    position: Position
-}
-
-impl Antenna {
-    pub fn new(y: i64, x:i64) -> Self {
-        Self {
-            position: Position::new(x,y),
-        }
-    }
-
-    pub fn calculate_frequency(&self, antenna: &Antenna) -> Position {
-        let x = self.position.x + 2 * (antenna.position.x - self.position.x); 
-        let y = self.position.y + 2 * (antenna.position.y - self.position.y); 
+    pub fn distance(&self, position: &Position) -> Position {
+        let x = self.x + 2 * (position.x - self.x); 
+        let y = self.y + 2 * (position.y - self.y); 
 
         Position::new(x,y)
     }
 }
-
