@@ -36,22 +36,27 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
     for (_key, value) in antennas.into_iter() {
         for i in 0..value.len() - 1 {
             for j in (i+1)..value.len() {
-                let frequency_for_i = value[i].distance(&value[j]);
+                let mut positions: Vec<Position> = vec![];
+
+                positions.append(&mut get_antinodes(map_size, &value[i], &value[j]));
+                positions.append(&mut get_antinodes(map_size, &value[j], &value[i]));
+
+                positions.into_iter().for_each(|position| {antinodes.entry(position).or_insert(1); });
+                
+                /* let frequency_for_i = value[i].distance(&value[j]);
                 let frequency_for_j = value[j].distance(&value[i]);
                 if is_valid_position(map_size, &frequency_for_i) {
                     antinodes.entry(frequency_for_i).or_insert(1);
                 }
                 if is_valid_position(map_size, &frequency_for_j) {
                     antinodes.entry(frequency_for_j).or_insert(1);
-                }
+                } */
             }
         }
     }
     println!("Antinodes: {:#?}", antinodes);
     println!("Unique Locations: {:#?}", antinodes.len());
-    fn is_valid_position(map_size: i64, position: &Position) -> bool {
-        position.x >= 0 && position.x < map_size && position.y >= 0 && position.y < map_size
-    }
+
     Ok(())
 }
 
@@ -69,10 +74,28 @@ impl Position {
             y
         }
     }
-    pub fn distance(&self, position: &Position) -> Position {
-        let x = self.x + 2 * (position.x - self.x); 
-        let y = self.y + 2 * (position.y - self.y); 
+    pub fn distance(&self, position: &Position, repeater: i64) -> Position {
+        let x = self.x + repeater * (position.x - self.x); 
+        let y = self.y + repeater * (position.y - self.y); 
 
         Position::new(x,y)
     }
+}
+
+fn is_valid_position(map_size: i64, position: &Position) -> bool {
+    position.x >= 0 && position.x < map_size && position.y >= 0 && position.y < map_size
+}
+
+fn get_antinodes(map_size: i64, position_a: &Position, position_b: &Position) -> Vec<Position> {
+    let mut repeater: i64 = 1;
+    let mut result: Vec<Position> = vec![];
+    loop {  
+        let position = position_a.distance(position_b, repeater);
+        if !is_valid_position(map_size, &position) {
+            break;
+        }
+        result.push(position);
+        repeater += 1;
+    }
+    result
 }
