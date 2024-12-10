@@ -4,54 +4,41 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error + 'static>> {
     let disk_map = fs::read_to_string("input.txt")?;
 
-    let checksum = defragment(disk_map);
+    let disk_map_parsed: Vec<u32> = disk_map.trim().chars().map(|el| el.to_digit(10).unwrap()).collect();
 
-    println!("checksum: {}", checksum);
+    // println!("disk_map_parsed: {:?}", disk_map_parsed);
+
+    let checksum = defragment(disk_map_parsed);
+
+    println!("checksum: {}", checksum); 
     Ok(())
 }
 
- fn defragment_fast(disk_map: &mut Vec<String>) -> &mut Vec<String>{
-    // find the block from the right and it's length
-    // find space from the left and to the left of the block
-    // if there is no space, continue with the next block
-    // if there is, place block there 
-    // free up block space
-    
-    // find first block
-    // initialize search with "."
-    // initialize count with 0
-    // get the first el
-    // if it is not .
-    // set search to it and count to 1
-    // continue searching, if it is equal search, increment count
-    // otherwise print the word, reset count and search
-    let mut search = String::from(".");
+ fn defragment_fast(disk_map: &mut Vec<i32>) -> &mut Vec<i32>{
+    let mut search = -1;
     let mut count = 0;
 
-    let disk_map_length = disk_map.len();
+    // iterate over the whole length
+    let mut disk_map_copy = disk_map.clone();
     for i in 0..disk_map.len() {
 
-        let index = disk_map.len()-1 - i;
-        let el = disk_map[index].clone();
-        // the next lines don't catch the first numbers, but this shouldn't be necessary as 
-        // they wont need to be rearranged
-        if search != String::from(".") && ( *el != search || index == 0 ) {
-            
+        let index = disk_map.len() -1 - i;
+        let el = disk_map_copy[index].clone();
+        if index == 0 || (search != -1 && el != search)  {
             match find_empty_space(disk_map, count, index) {
                Some(value) => {
                     for j in 0..count {
-                       disk_map[j+value] = search.clone();
-                       disk_map[index + count - j] = String::from(".");
+                       disk_map[j+value] = search;
+                       disk_map[index + count - j] = -1;
                     }
-                    // println!("{:?}", disk_map.join(""));
                },
                None => (),
             }
-            search = String::from(".");
+            search = -1;
             count = 0;
         }
-        if *el != String::from(".") {
-            search = el.to_string();
+        if el != -1 {
+            search = el;
             count += 1;
         }
 
@@ -59,47 +46,22 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
     disk_map
 }
 
-
-fn _defragment(disk_map: &mut Vec<String>) -> &mut Vec<String> {
-    let mut i = 0;
-    let mut j = disk_map.len() - 1;
-
-    while i < j {
-        while disk_map[i] != String::from(".") {
-            i += 1;
-            continue;
-        }
-        while disk_map[j] == String::from(".") {
-            j -= 1;
-            continue;
-        }
-        if i < j {
-            disk_map[i] = disk_map[j].clone();
-            disk_map[j] = String::from(".");
-        } 
-        i += 1;
-        j -= 1;
-    }
-    disk_map
-
-}
-
-fn calculate_checksum(disk_map: &mut Vec<String>) -> usize { 
+fn calculate_checksum(disk_map: &mut Vec<i32>) -> usize { 
     disk_map
         .into_iter()
         .enumerate()
         .fold(0, |acc, (index, curr)|{
-            if *curr == String::from(".") {
+            if *curr == -1 {
                 return acc;
             }
-            acc + index * curr.parse::<usize>().unwrap() as usize
+            acc + index * *curr as usize
         })
 }
 
-fn find_empty_space(disk_map: &Vec<String>, space: usize, limit: usize) -> Option<usize> {
+fn find_empty_space(disk_map: &Vec<i32>, space: usize, limit: usize) -> Option<usize> {
     let mut count = 0;
     for i in 0..(limit + 1) {
-       if disk_map[i] == "." {
+       if disk_map[i] == -1 {
            count += 1;
            if count == space {
                return Some(i - space + 1);
@@ -111,24 +73,22 @@ fn find_empty_space(disk_map: &Vec<String>, space: usize, limit: usize) -> Optio
     None    
 }
 
-fn defragment(disk_map: String) -> usize {
-    let mut result: Vec<String> = vec![];
-    disk_map.chars().enumerate().for_each(|(i, el)| {
+fn defragment(disk_map: Vec<u32>) -> usize {
+    let mut result: Vec<i32> = vec![];
+    disk_map.into_iter().enumerate().for_each(|(i, el)| {
         if i % 2 == 0 {
-            let mut block = vec![(i/2).to_string();
-                el   
-                    .to_digit(10)
-                    .unwrap()
-                    .try_into()
-                    .unwrap()];
+            let mut block = vec![(i/2) as i32; el as usize];
             result.append(&mut block);
         } else {
-            let mut free_space = vec![String::from("."); el.to_digit(10).unwrap().try_into().unwrap()];
+            let mut free_space = vec![-1; el as usize];
             result.append(&mut free_space);
         }
     });
+    // println!("fragmented: {:?}", result);
 
     let defragment_result = defragment_fast(&mut result);
+
+    // println!("defragment_result: {:?}", defragment_result);
 
     calculate_checksum(defragment_result)
 }
@@ -151,12 +111,12 @@ mod tests {
 
     #[test]
     fn test_3() {
-        let result = defragment(String::from("12345"));
+        let result = defragment(12345);
         assert_eq!(result, 132);
     }
 
     fn test_4() {
-        let result = defragment(String::from("6586278992486738267411111"));
+        let result = defragment(6586278992486738267411111);
         // 6586278992486738267411111
         // 000000.....11111111......22.......33333333.........444444444..5555........666666.......777........88......9999999....10.11.12
         // 000000XIIXIX881111111177722...999999933333333666666...444444444..5555........................................................
