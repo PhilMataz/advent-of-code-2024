@@ -1,6 +1,17 @@
+/*
+8X010123
+78121874
+87430965
+X654X874
+45678X03
+3201X012
+0132X801
+10456732
+*/
 use std::fs;
 use std::error::Error;
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 fn main() -> Result<(), Box<dyn Error + 'static>> {
     
@@ -22,11 +33,11 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
         acc
     });
 
-    
+    let mut total_rating:usize = 0; 
     let total_score: usize = trailhead_indexes.into_iter().map(|el| {
         let mut coordinates = vec![el];
 
-        get_next_coordinates(&mut coordinates, el, &input, rows);
+        get_next_coordinates(&mut coordinates, el, &input, rows, &mut total_rating);
 
         let unique_coordinates: HashSet<usize> = coordinates.clone().into_iter().collect();
 
@@ -39,23 +50,48 @@ fn main() -> Result<(), Box<dyn Error + 'static>> {
 
 
         trailhead_score
-    }).fold(0, |acc, curr| acc+curr);
+    }).fold(0, |acc, curr| acc+curr); 
 
     println!("trailheads: {:?}", total_score);
+    let mut rating = 0;
 
-    fn get_next_coordinates(coordinates: &mut Vec<usize>, current_index: usize, input: &Vec<usize>, size: usize) {
+    let trailhead_scores:HashMap<usize, usize> = HashMap::new();
+
+    fn get_next_coordinates(coordinates: &mut Vec<usize>, current_index: usize, input: &Vec<usize>, size: usize, rating: &mut usize) {
         let directions: Vec<Direction> = 
             vec![Direction::Right, Direction::Bottom, Direction::Left, Direction::Top];
 
         for direction in directions {
             if let Some(index) = get_next_index(current_index, &direction, size, size) {
                 if input[current_index] + 1 == input[index] {
+                    if input[index] == 9 {
+                        *rating += 1;
+                    }
                     coordinates.push(index);
-                    get_next_coordinates(coordinates, index, input, size);
+                    get_next_coordinates(coordinates, index, input, size, rating);
                 }
             }
         }
     }
+
+    
+    let mut coordinates: Vec<usize> = vec![2];
+    
+    get_next_coordinates(&mut coordinates, 2, &input, rows, &mut rating);
+    println!("Rating is: {}", total_rating);
+
+
+
+    let unique_coordinates: HashSet<usize> = coordinates.clone().into_iter().collect();
+
+    let trailhead_score = unique_coordinates.into_iter().map(|el| input[el]).fold(0, |acc, curr| {
+        if curr == 9 {
+            return acc + 1
+        }
+        acc
+    });
+    println!("Trailhead Score: {}", trailhead_score);
+    // println!("Unique Coordinates: {:?}", unique_coordinates.into_iter().map(|el| input[el]).collect::<Vec<usize>>());
 
     Ok(())
 }
